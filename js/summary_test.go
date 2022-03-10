@@ -35,7 +35,7 @@ import (
 
 	"go.k6.io/k6/lib"
 	"go.k6.io/k6/lib/testutils"
-	"go.k6.io/k6/stats"
+	"go.k6.io/k6/metrics"
 )
 
 const (
@@ -98,17 +98,17 @@ func TestTextSummary(t *testing.T) {
 func TestTextSummaryWithSubMetrics(t *testing.T) {
 	t.Parallel()
 
-	parentMetric := stats.New("my_parent", stats.Counter)
-	parentMetric.Sink.Add(stats.Sample{Value: 11})
-	parentMetricPost := stats.New("my_parent_post", stats.Counter)
-	parentMetricPost.Sink.Add(stats.Sample{Value: 22})
+	parentMetric := metrics.New("my_parent", metrics.Counter)
+	parentMetric.Sink.Add(metrics.Sample{Value: 11})
+	parentMetricPost := metrics.New("my_parent_post", metrics.Counter)
+	parentMetricPost.Sink.Add(metrics.Sample{Value: 22})
 
-	subMetric := stats.New("my_parent{sub:1}", stats.Counter)
-	subMetric.Sink.Add(stats.Sample{Value: 1})
-	subMetricPost := stats.New("my_parent_post{sub:2}", stats.Counter)
-	subMetricPost.Sink.Add(stats.Sample{Value: 2})
+	subMetric := metrics.New("my_parent{sub:1}", metrics.Counter)
+	subMetric.Sink.Add(metrics.Sample{Value: 1})
+	subMetricPost := metrics.New("my_parent_post{sub:2}", metrics.Counter)
+	subMetricPost.Sink.Add(metrics.Sample{Value: 2})
 
-	metrics := map[string]*stats.Metric{
+	metrics := map[string]*metrics.Metric{
 		parentMetric.Name:     parentMetric,
 		parentMetricPost.Name: parentMetricPost,
 		subMetric.Name:        subMetric,
@@ -146,37 +146,37 @@ func TestTextSummaryWithSubMetrics(t *testing.T) {
 	assert.Equal(t, "\n"+expected+"\n", string(summaryOut))
 }
 
-func createTestMetrics(t *testing.T) (map[string]*stats.Metric, *lib.Group) {
-	metrics := make(map[string]*stats.Metric)
-	gaugeMetric := stats.New("vus", stats.Gauge)
-	gaugeMetric.Sink.Add(stats.Sample{Value: 1})
+func createTestMetrics(t *testing.T) (map[string]*metrics.Metric, *lib.Group) {
+	testMetrics := make(map[string]*metrics.Metric)
+	gaugeMetric := metrics.New("vus", metrics.Gauge)
+	gaugeMetric.Sink.Add(metrics.Sample{Value: 1})
 
-	countMetric := stats.New("http_reqs", stats.Counter)
+	countMetric := metrics.New("http_reqs", metrics.Counter)
 	countMetric.Tainted = null.BoolFrom(true)
-	countMetric.Thresholds = stats.Thresholds{Thresholds: []*stats.Threshold{{Source: "rate<100", LastFailed: true}}}
+	countMetric.Thresholds = metrics.Thresholds{Thresholds: []*metrics.Threshold{{Source: "rate<100", LastFailed: true}}}
 
-	checksMetric := stats.New("checks", stats.Rate)
+	checksMetric := metrics.New("checks", metrics.Rate)
 	checksMetric.Tainted = null.BoolFrom(false)
-	checksMetric.Thresholds = stats.Thresholds{Thresholds: []*stats.Threshold{{Source: "rate>70", LastFailed: false}}}
-	sink := &stats.TrendSink{}
+	checksMetric.Thresholds = metrics.Thresholds{Thresholds: []*metrics.Threshold{{Source: "rate>70", LastFailed: false}}}
+	sink := &metrics.TrendSink{}
 
 	samples := []float64{10.0, 15.0, 20.0}
 	for _, s := range samples {
-		sink.Add(stats.Sample{Value: s})
-		countMetric.Sink.Add(stats.Sample{Value: 1})
+		sink.Add(metrics.Sample{Value: s})
+		countMetric.Sink.Add(metrics.Sample{Value: 1})
 	}
 
-	metrics["vus"] = gaugeMetric
-	metrics["http_reqs"] = countMetric
-	metrics["checks"] = checksMetric
-	metrics["my_trend"] = &stats.Metric{
+	testMetrics["vus"] = gaugeMetric
+	testMetrics["http_reqs"] = countMetric
+	testMetrics["checks"] = checksMetric
+	testMetrics["my_trend"] = &metrics.Metric{
 		Name:     "my_trend",
-		Type:     stats.Trend,
-		Contains: stats.Time,
+		Type:     metrics.Trend,
+		Contains: metrics.Time,
 		Sink:     sink,
 		Tainted:  null.BoolFrom(true),
-		Thresholds: stats.Thresholds{
-			Thresholds: []*stats.Threshold{
+		Thresholds: metrics.Thresholds{
+			Thresholds: []*metrics.Threshold{
 				{
 					Source:     "my_trend<1000",
 					LastFailed: true,
@@ -204,13 +204,13 @@ func createTestMetrics(t *testing.T) (map[string]*stats.Metric, *lib.Group) {
 	check2.Fails = 10
 
 	for i := 0; i < int(check1.Passes+check2.Passes+check3.Passes); i++ {
-		checksMetric.Sink.Add(stats.Sample{Value: 1})
+		checksMetric.Sink.Add(metrics.Sample{Value: 1})
 	}
 	for i := 0; i < int(check1.Fails+check2.Fails+check3.Fails); i++ {
-		checksMetric.Sink.Add(stats.Sample{Value: 0})
+		checksMetric.Sink.Add(metrics.Sample{Value: 0})
 	}
 
-	return metrics, rootG
+	return testMetrics, rootG
 }
 
 func createTestSummary(t *testing.T) *lib.Summary {

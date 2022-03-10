@@ -27,18 +27,18 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/guregu/null.v3"
 
-	"go.k6.io/k6/stats"
+	"go.k6.io/k6/metrics"
 )
 
 func TestNullMetricTypeJSON(t *testing.T) {
 	t.Parallel()
 
 	values := map[NullMetricType]string{
-		{}:                    `null`,
-		{stats.Counter, true}: `"counter"`,
-		{stats.Gauge, true}:   `"gauge"`,
-		{stats.Trend, true}:   `"trend"`,
-		{stats.Rate, true}:    `"rate"`,
+		{}:                      `null`,
+		{metrics.Counter, true}: `"counter"`,
+		{metrics.Gauge, true}:   `"gauge"`,
+		{metrics.Trend, true}:   `"trend"`,
+		{metrics.Rate, true}:    `"rate"`,
 	}
 	t.Run("Marshal", func(t *testing.T) {
 		t.Parallel()
@@ -72,9 +72,9 @@ func TestNullValueTypeJSON(t *testing.T) {
 	t.Parallel()
 
 	values := map[NullValueType]string{
-		{}:                    `null`,
-		{stats.Default, true}: `"default"`,
-		{stats.Time, true}:    `"time"`,
+		{}:                      `null`,
+		{metrics.Default, true}: `"default"`,
+		{metrics.Time, true}:    `"time"`,
 	}
 	t.Run("Marshal", func(t *testing.T) {
 		t.Parallel()
@@ -107,15 +107,15 @@ func TestNullValueTypeJSON(t *testing.T) {
 func TestNewMetric(t *testing.T) {
 	t.Parallel()
 
-	old := stats.New("name", stats.Trend, stats.Time)
+	old := metrics.New("name", metrics.Trend, metrics.Time)
 	old.Tainted = null.BoolFrom(true)
 	m := NewMetric(old, 0)
 	assert.Equal(t, "name", m.Name)
 	assert.True(t, m.Type.Valid)
-	assert.Equal(t, stats.Trend, m.Type.Type)
+	assert.Equal(t, metrics.Trend, m.Type.Type)
 	assert.True(t, m.Contains.Valid)
 	assert.True(t, m.Tainted.Bool)
 	assert.True(t, m.Tainted.Valid)
-	assert.Equal(t, stats.Time, m.Contains.Type)
+	assert.Equal(t, metrics.Time, m.Contains.Type)
 	assert.NotEmpty(t, m.Sample)
 }

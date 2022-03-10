@@ -23,7 +23,7 @@ package json
 import (
 	"time"
 
-	"go.k6.io/k6/stats"
+	"go.k6.io/k6/metrics"
 )
 
 // Envelope is the data format we use to export both metrics and metric samples
@@ -36,12 +36,12 @@ type Envelope struct {
 
 // Sample is the data format for metric sample data in the JSON file.
 type Sample struct {
-	Time  time.Time         `json:"time"`
-	Value float64           `json:"value"`
-	Tags  *stats.SampleTags `json:"tags"`
+	Time  time.Time           `json:"time"`
+	Value float64             `json:"value"`
+	Tags  *metrics.SampleTags `json:"tags"`
 }
 
-func newJSONSample(sample stats.Sample) Sample {
+func newJSONSample(sample metrics.Sample) Sample {
 	return Sample{
 		Time:  sample.Time,
 		Value: sample.Value,
@@ -51,7 +51,7 @@ func newJSONSample(sample stats.Sample) Sample {
 
 // WrapSample is used to package a metric sample in a way that's nice to export
 // to JSON.
-func WrapSample(sample stats.Sample) Envelope {
+func WrapSample(sample metrics.Sample) Envelope {
 	return Envelope{
 		Type:   "Point",
 		Metric: sample.Metric.Name,
@@ -59,7 +59,7 @@ func WrapSample(sample stats.Sample) Envelope {
 	}
 }
 
-func wrapMetric(metric *stats.Metric) *Envelope {
+func wrapMetric(metric *metrics.Metric) *Envelope {
 	if metric == nil {
 		return nil
 	}

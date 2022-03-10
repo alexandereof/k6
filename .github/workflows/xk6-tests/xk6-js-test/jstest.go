@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"go.k6.io/k6/lib"
-	"go.k6.io/k6/stats"
+	"go.k6.io/k6/metrics"
 
 	"go.k6.io/k6/js/modules"
 )
@@ -44,12 +44,12 @@ func (j JSTest) Foo(ctx context.Context, arg float64) (bool, error) {
 		return false, fmt.Errorf("called in init context")
 	}
 
-	allTheFoos := stats.New("foos", stats.Counter)
+	allTheFoos := metrics.New("foos", metrics.Counter)
 	tags := state.CloneTags()
 	tags["foo"] = "bar"
-	stats.PushIfNotDone(ctx, state.Samples, stats.Sample{
+	metrics.PushIfNotDone(ctx, state.Samples, metrics.Sample{
 		Time:   time.Now(),
-		Metric: allTheFoos, Tags: stats.IntoSampleTags(&tags),
+		Metric: allTheFoos, Tags: metrics.IntoSampleTags(&tags),
 		Value: arg,
 	})
 

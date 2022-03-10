@@ -31,7 +31,7 @@ import (
 
 	"go.k6.io/k6/lib/testutils"
 	"go.k6.io/k6/lib/types"
-	"go.k6.io/k6/stats"
+	"go.k6.io/k6/metrics"
 )
 
 type getOutputFn func(
@@ -44,7 +44,7 @@ type getOutputFn func(
 //nolint:funlen
 func baseTest(t *testing.T,
 	getOutput getOutputFn,
-	checkResult func(t *testing.T, samples []stats.SampleContainer, expectedOutput, output string),
+	checkResult func(t *testing.T, samples []metrics.SampleContainer, expectedOutput, output string),
 ) {
 	t.Helper()
 	testNamespace := "testing.things." // to be dynamic
@@ -85,24 +85,24 @@ func baseTest(t *testing.T,
 	defer func() {
 		require.NoError(t, collector.Stop())
 	}()
-	newSample := func(m *stats.Metric, value float64, tags map[string]string) stats.Sample {
-		return stats.Sample{
+	newSample := func(m *metrics.Metric, value float64, tags map[string]string) metrics.Sample {
+		return metrics.Sample{
 			Time:   time.Now(),
-			Metric: m, Value: value, Tags: stats.IntoSampleTags(&tags),
+			Metric: m, Value: value, Tags: metrics.IntoSampleTags(&tags),
 		}
 	}
 
-	myCounter := stats.New("my_counter", stats.Counter)
-	myGauge := stats.New("my_gauge", stats.Gauge)
-	myTrend := stats.New("my_trend", stats.Trend)
-	myRate := stats.New("my_rate", stats.Rate)
-	myCheck := stats.New("my_check", stats.Rate)
+	myCounter := metrics.New("my_counter", metrics.Counter)
+	myGauge := metrics.New("my_gauge", metrics.Gauge)
+	myTrend := metrics.New("my_trend", metrics.Trend)
+	myRate := metrics.New("my_rate", metrics.Rate)
+	myCheck := metrics.New("my_check", metrics.Rate)
 	testMatrix := []struct {
-		input  []stats.SampleContainer
+		input  []metrics.SampleContainer
 		output string
 	}{
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myCounter, 12, map[string]string{
 					"tag1": "value1",
 					"tag3": "value3",
@@ -111,7 +111,7 @@ func baseTest(t *testing.T,
 			output: "testing.things.my_counter:12|c",
 		},
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myGauge, 13, map[string]string{
 					"tag1": "value1",
 					"tag3": "value3",
@@ -120,7 +120,7 @@ func baseTest(t *testing.T,
 			output: "testing.things.my_gauge:13.000000|g",
 		},
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myTrend, 14, map[string]string{
 					"tag1": "value1",
 					"tag3": "value3",
@@ -129,7 +129,7 @@ func baseTest(t *testing.T,
 			output: "testing.things.my_trend:14.000000|ms",
 		},
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myRate, 15, map[string]string{
 					"tag1": "value1",
 					"tag3": "value3",
@@ -138,7 +138,7 @@ func baseTest(t *testing.T,
 			output: "testing.things.my_rate:15|c",
 		},
 		{
-			input: []stats.SampleContainer{
+			input: []metrics.SampleContainer{
 				newSample(myCheck, 16, map[string]string{
 					"tag1":  "value1",
 					"tag3":  "value3",

@@ -29,8 +29,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"go.k6.io/k6/metrics"
 	"go.k6.io/k6/output"
-	"go.k6.io/k6/stats"
 )
 
 // TODO: add option for emitting proper JSON files (https://github.com/k6io/k6/issues/737)
@@ -48,7 +48,7 @@ type Output struct {
 	encoder     *stdlibjson.Encoder
 	closeFn     func() error
 	seenMetrics map[string]struct{}
-	thresholds  map[string][]*stats.Threshold
+	thresholds  map[string][]*metrics.Threshold
 }
 
 // New returns a new JSON output.
@@ -123,8 +123,8 @@ func (o *Output) Stop() error {
 }
 
 // SetThresholds receives the thresholds before the output is Start()-ed.
-func (o *Output) SetThresholds(thresholds map[string]stats.Thresholds) {
-	ths := make(map[string][]*stats.Threshold)
+func (o *Output) SetThresholds(thresholds map[string]metrics.Thresholds) {
+	ths := make(map[string][]*metrics.Threshold)
 	for name, t := range thresholds {
 		ths[name] = append(ths[name], t.Thresholds...)
 	}
@@ -154,7 +154,7 @@ func (o *Output) flushMetrics() {
 	}
 }
 
-func (o *Output) handleMetric(m *stats.Metric) {
+func (o *Output) handleMetric(m *metrics.Metric) {
 	if _, ok := o.seenMetrics[m.Name]; ok {
 		return
 	}

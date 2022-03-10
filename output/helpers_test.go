@@ -29,36 +29,36 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"go.k6.io/k6/stats"
+	"go.k6.io/k6/metrics"
 )
 
 func TestSampleBufferBasics(t *testing.T) {
 	t.Parallel()
-	single := stats.Sample{
+	single := metrics.Sample{
 		Time:   time.Now(),
-		Metric: stats.New("my_metric", stats.Rate),
+		Metric: metrics.New("my_metric", metrics.Rate),
 		Value:  float64(123),
-		Tags:   stats.NewSampleTags(map[string]string{"tag1": "val1"}),
+		Tags:   metrics.NewSampleTags(map[string]string{"tag1": "val1"}),
 	}
-	connected := stats.ConnectedSamples{Samples: []stats.Sample{single, single}, Time: single.Time}
+	connected := metrics.ConnectedSamples{Samples: []metrics.Sample{single, single}, Time: single.Time}
 	buffer := SampleBuffer{}
 
 	assert.Empty(t, buffer.GetBufferedSamples())
-	buffer.AddMetricSamples([]stats.SampleContainer{single, single})
-	buffer.AddMetricSamples([]stats.SampleContainer{single, connected, single})
-	assert.Equal(t, []stats.SampleContainer{single, single, single, connected, single}, buffer.GetBufferedSamples())
+	buffer.AddMetricSamples([]metrics.SampleContainer{single, single})
+	buffer.AddMetricSamples([]metrics.SampleContainer{single, connected, single})
+	assert.Equal(t, []metrics.SampleContainer{single, single, single, connected, single}, buffer.GetBufferedSamples())
 	assert.Empty(t, buffer.GetBufferedSamples())
 
 	// Verify some internals
 	assert.Equal(t, cap(buffer.buffer), 5)
-	buffer.AddMetricSamples([]stats.SampleContainer{single, connected})
+	buffer.AddMetricSamples([]metrics.SampleContainer{single, connected})
 	buffer.AddMetricSamples(nil)
-	buffer.AddMetricSamples([]stats.SampleContainer{})
-	buffer.AddMetricSamples([]stats.SampleContainer{single})
-	assert.Equal(t, []stats.SampleContainer{single, connected, single}, buffer.GetBufferedSamples())
+	buffer.AddMetricSamples([]metrics.SampleContainer{})
+	buffer.AddMetricSamples([]metrics.SampleContainer{single})
+	assert.Equal(t, []metrics.SampleContainer{single, connected, single}, buffer.GetBufferedSamples())
 	assert.Equal(t, cap(buffer.buffer), 4)
-	buffer.AddMetricSamples([]stats.SampleContainer{single})
-	assert.Equal(t, []stats.SampleContainer{single}, buffer.GetBufferedSamples())
+	buffer.AddMetricSamples([]metrics.SampleContainer{single})
+	assert.Equal(t, []metrics.SampleContainer{single}, buffer.GetBufferedSamples())
 	assert.Equal(t, cap(buffer.buffer), 3)
 	assert.Empty(t, buffer.GetBufferedSamples())
 }
@@ -78,11 +78,11 @@ func TestSampleBufferConcurrently(t *testing.T) {
 	wg := make(chan struct{})
 	fillBuffer := func() {
 		for i := 0; i < sampleCount; i++ {
-			buffer.AddMetricSamples([]stats.SampleContainer{stats.Sample{
+			buffer.AddMetricSamples([]metrics.SampleContainer{metrics.Sample{
 				Time:   time.Unix(1562324644, 0),
-				Metric: stats.New("my_metric", stats.Gauge),
+				Metric: metrics.New("my_metric", metrics.Gauge),
 				Value:  float64(i),
-				Tags:   stats.NewSampleTags(map[string]string{"tag1": "val1"}),
+				Tags:   metrics.NewSampleTags(map[string]string{"tag1": "val1"}),
 			}})
 			time.Sleep(time.Duration(i*sleepModifier) * time.Microsecond)
 		}
@@ -95,7 +95,7 @@ func TestSampleBufferConcurrently(t *testing.T) {
 	timer := time.NewTicker(5 * time.Millisecond)
 	timeout := time.After(5 * time.Second)
 	defer timer.Stop()
-	readSamples := make([]stats.SampleContainer, 0, sampleCount*producersCount)
+	readSamples := make([]metrics.SampleContainer, 0, sampleCount*producersCount)
 	finishedProducers := 0
 loop:
 	for {

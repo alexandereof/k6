@@ -37,8 +37,8 @@ import (
 
 	"go.k6.io/k6/lib"
 	"go.k6.io/k6/lib/testutils"
+	"go.k6.io/k6/metrics"
 	"go.k6.io/k6/output"
-	"go.k6.io/k6/stats"
 )
 
 func TestMakeHeader(t *testing.T) {
@@ -67,17 +67,17 @@ func TestMakeHeader(t *testing.T) {
 func TestSampleToRow(t *testing.T) {
 	testData := []struct {
 		testname    string
-		sample      *stats.Sample
+		sample      *metrics.Sample
 		resTags     []string
 		ignoredTags []string
 	}{
 		{
 			testname: "One res tag, one ignored tag, one extra tag",
-			sample: &stats.Sample{
+			sample: &metrics.Sample{
 				Time:   time.Unix(1562324644, 0),
-				Metric: stats.New("my_metric", stats.Gauge),
+				Metric: metrics.New("my_metric", metrics.Gauge),
 				Value:  1,
-				Tags: stats.NewSampleTags(map[string]string{
+				Tags: metrics.NewSampleTags(map[string]string{
 					"tag1": "val1",
 					"tag2": "val2",
 					"tag3": "val3",
@@ -88,11 +88,11 @@ func TestSampleToRow(t *testing.T) {
 		},
 		{
 			testname: "Two res tags, three extra tags",
-			sample: &stats.Sample{
+			sample: &metrics.Sample{
 				Time:   time.Unix(1562324644, 0),
-				Metric: stats.New("my_metric", stats.Gauge),
+				Metric: metrics.New("my_metric", metrics.Gauge),
 				Value:  1,
-				Tags: stats.NewSampleTags(map[string]string{
+				Tags: metrics.NewSampleTags(map[string]string{
 					"tag1": "val1",
 					"tag2": "val2",
 					"tag3": "val3",
@@ -105,11 +105,11 @@ func TestSampleToRow(t *testing.T) {
 		},
 		{
 			testname: "Two res tags, two ignored",
-			sample: &stats.Sample{
+			sample: &metrics.Sample{
 				Time:   time.Unix(1562324644, 0),
-				Metric: stats.New("my_metric", stats.Gauge),
+				Metric: metrics.New("my_metric", metrics.Gauge),
 				Value:  1,
-				Tags: stats.NewSampleTags(map[string]string{
+				Tags: metrics.NewSampleTags(map[string]string{
 					"tag1": "val1",
 					"tag2": "val2",
 					"tag3": "val3",
@@ -215,28 +215,28 @@ func readCompressedFile(fileName string, fs afero.Fs) string {
 func TestRun(t *testing.T) {
 	t.Parallel()
 	testData := []struct {
-		samples        []stats.SampleContainer
+		samples        []metrics.SampleContainer
 		fileName       string
 		fileReaderFunc func(fileName string, fs afero.Fs) string
 		outputContent  string
 	}{
 		{
-			samples: []stats.SampleContainer{
-				stats.Sample{
+			samples: []metrics.SampleContainer{
+				metrics.Sample{
 					Time:   time.Unix(1562324643, 0),
-					Metric: stats.New("my_metric", stats.Gauge),
+					Metric: metrics.New("my_metric", metrics.Gauge),
 					Value:  1,
-					Tags: stats.NewSampleTags(map[string]string{
+					Tags: metrics.NewSampleTags(map[string]string{
 						"check": "val1",
 						"url":   "val2",
 						"error": "val3",
 					}),
 				},
-				stats.Sample{
+				metrics.Sample{
 					Time:   time.Unix(1562324644, 0),
-					Metric: stats.New("my_metric", stats.Gauge),
+					Metric: metrics.New("my_metric", metrics.Gauge),
 					Value:  1,
-					Tags: stats.NewSampleTags(map[string]string{
+					Tags: metrics.NewSampleTags(map[string]string{
 						"check": "val1",
 						"url":   "val2",
 						"error": "val3",
@@ -249,22 +249,22 @@ func TestRun(t *testing.T) {
 			outputContent:  "metric_name,timestamp,metric_value,check,error,extra_tags\n" + "my_metric,1562324643,1.000000,val1,val3,url=val2\n" + "my_metric,1562324644,1.000000,val1,val3,tag4=val4&url=val2\n",
 		},
 		{
-			samples: []stats.SampleContainer{
-				stats.Sample{
+			samples: []metrics.SampleContainer{
+				metrics.Sample{
 					Time:   time.Unix(1562324643, 0),
-					Metric: stats.New("my_metric", stats.Gauge),
+					Metric: metrics.New("my_metric", metrics.Gauge),
 					Value:  1,
-					Tags: stats.NewSampleTags(map[string]string{
+					Tags: metrics.NewSampleTags(map[string]string{
 						"check": "val1",
 						"url":   "val2",
 						"error": "val3",
 					}),
 				},
-				stats.Sample{
+				metrics.Sample{
 					Time:   time.Unix(1562324644, 0),
-					Metric: stats.New("my_metric", stats.Gauge),
+					Metric: metrics.New("my_metric", metrics.Gauge),
 					Value:  1,
-					Tags: stats.NewSampleTags(map[string]string{
+					Tags: metrics.NewSampleTags(map[string]string{
 						"check": "val1",
 						"url":   "val2",
 						"error": "val3",
@@ -285,7 +285,7 @@ func TestRun(t *testing.T) {
 			FS:             mem,
 			ConfigArgument: data.fileName,
 			ScriptOptions: lib.Options{
-				SystemTags: stats.NewSystemTagSet(stats.TagError | stats.TagCheck),
+				SystemTags: metrics.NewSystemTagSet(metrics.TagError | metrics.TagCheck),
 			},
 		})
 		require.NoError(t, err)
