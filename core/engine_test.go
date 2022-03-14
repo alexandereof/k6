@@ -103,6 +103,8 @@ func TestNewEngine(t *testing.T) {
 func TestEngineRun(t *testing.T) {
 	t.Parallel()
 	logrus.SetLevel(logrus.DebugLevel)
+	registry := metrics.NewRegistry()
+
 	t.Run("exits with context", func(t *testing.T) {
 		t.Parallel()
 		done := make(chan struct{})
@@ -139,7 +141,8 @@ func TestEngineRun(t *testing.T) {
 	// Make sure samples are discarded after context close (using "cutoff" timestamp in local.go)
 	t.Run("collects samples", func(t *testing.T) {
 		t.Parallel()
-		testMetric := stats.New("test_metric", stats.Trend)
+		testMetric, err := registry.NewMetric("test_metric", stats.Trend)
+		require.NoError(t, err)
 
 		signalChan := make(chan interface{})
 
@@ -211,7 +214,9 @@ func TestEngineStopped(t *testing.T) {
 
 func TestEngineOutput(t *testing.T) {
 	t.Parallel()
-	testMetric := stats.New("test_metric", stats.Trend)
+	registry := metrics.NewRegistry()
+	testMetric, err := registry.NewMetric("test_metric", stats.Trend)
+	require.NoError(t, err)
 
 	runner := &minirunner.MiniRunner{
 		Fn: func(ctx context.Context, _ *lib.State, out chan<- stats.SampleContainer) error {
@@ -248,7 +253,9 @@ func TestEngineOutput(t *testing.T) {
 
 func TestEngine_processSamples(t *testing.T) {
 	t.Parallel()
-	metric := stats.New("my_metric", stats.Gauge)
+	registry := metrics.NewRegistry()
+	metric, err := registry.NewMetric("my_metric", stats.Gauge)
+	require.NoError(t, err)
 
 	t.Run("metric", func(t *testing.T) {
 		t.Parallel()
@@ -290,7 +297,9 @@ func TestEngine_processSamples(t *testing.T) {
 
 func TestEngineThresholdsWillAbort(t *testing.T) {
 	t.Parallel()
-	metric := stats.New("my_metric", stats.Gauge)
+	registry := metrics.NewRegistry()
+	metric, err := registry.NewMetric("my_metric", stats.Gauge)
+	require.NoError(t, err)
 
 	// The incoming samples for the metric set it to 1.25. Considering
 	// the metric is of type Gauge, value > 1.25 should always fail, and
@@ -313,7 +322,9 @@ func TestEngineThresholdsWillAbort(t *testing.T) {
 
 func TestEngineAbortedByThresholds(t *testing.T) {
 	t.Parallel()
-	metric := stats.New("my_metric", stats.Gauge)
+	registry := metrics.NewRegistry()
+	metric, err := registry.NewMetric("my_metric", stats.Gauge)
+	require.NoError(t, err)
 
 	// The MiniRunner sets the value of the metric to 1.25. Considering
 	// the metric is of type Gauge, value > 1.25 should always fail, and
@@ -353,7 +364,9 @@ func TestEngineAbortedByThresholds(t *testing.T) {
 
 func TestEngine_processThresholds(t *testing.T) {
 	t.Parallel()
-	metric := stats.New("my_metric", stats.Gauge)
+	registry := metrics.NewRegistry()
+	metric, err := registry.NewMetric("my_metric", stats.Gauge)
+	require.NoError(t, err)
 
 	testdata := map[string]struct {
 		pass  bool
@@ -1128,7 +1141,9 @@ func TestMinIterationDurationInSetupTeardownStage(t *testing.T) {
 
 func TestEngineRunsTeardownEvenAfterTestRunIsAborted(t *testing.T) {
 	t.Parallel()
-	testMetric := stats.New("teardown_metric", stats.Counter)
+	registry := metrics.NewRegistry()
+	testMetric, err := registry.NewMetric("teardown_metric", stats.Counter)
+	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 

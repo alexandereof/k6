@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"go.k6.io/k6/lib"
+	"go.k6.io/k6/lib/metrics"
 	"go.k6.io/k6/stats"
 
 	"go.k6.io/k6/js/modules"
@@ -44,7 +45,8 @@ func (j JSTest) Foo(ctx context.Context, arg float64) (bool, error) {
 		return false, fmt.Errorf("called in init context")
 	}
 
-	allTheFoos := stats.New("foos", stats.Counter)
+	registry := metrics.NewRegistry()
+	allTheFoos := registry.MustNewMetric("foos", stats.Counter)
 	tags := state.CloneTags()
 	tags["foo"] = "bar"
 	stats.PushIfNotDone(ctx, state.Samples, stats.Sample{

@@ -52,8 +52,10 @@ func TestGetMetrics(t *testing.T) {
 	engine, err := core.NewEngine(execScheduler, lib.Options{}, lib.RuntimeOptions{}, nil, logger, builtinMetrics)
 	require.NoError(t, err)
 
+	m, err := registry.NewMetric("my_metric", stats.Trend, stats.Time)
+	require.NoError(t, err)
 	engine.Metrics = map[string]*stats.Metric{
-		"my_metric": stats.New("my_metric", stats.Trend, stats.Time),
+		"my_metric": m,
 	}
 	engine.Metrics["my_metric"].Tainted = null.BoolFrom(true)
 
@@ -112,8 +114,10 @@ func TestGetMetric(t *testing.T) {
 	engine, err := core.NewEngine(execScheduler, lib.Options{}, lib.RuntimeOptions{}, nil, logger, builtinMetrics)
 	require.NoError(t, err)
 
+	m, err := registry.NewMetric("my_metric", stats.Trend, stats.Time)
+	require.NoError(t, err)
 	engine.Metrics = map[string]*stats.Metric{
-		"my_metric": stats.New("my_metric", stats.Trend, stats.Time),
+		"my_metric": m,
 	}
 	engine.Metrics["my_metric"].Tainted = null.BoolFrom(true)
 

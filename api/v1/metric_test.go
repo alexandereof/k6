@@ -25,8 +25,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/guregu/null.v3"
 
+	"go.k6.io/k6/lib/metrics"
 	"go.k6.io/k6/stats"
 )
 
@@ -107,7 +109,9 @@ func TestNullValueTypeJSON(t *testing.T) {
 func TestNewMetric(t *testing.T) {
 	t.Parallel()
 
-	old := stats.New("name", stats.Trend, stats.Time)
+	registry := metrics.NewRegistry()
+	old, err := registry.NewMetric("name", stats.Trend, stats.Time)
+	require.NoError(t, err)
 	old.Tainted = null.BoolFrom(true)
 	m := NewMetric(old, 0)
 	assert.Equal(t, "name", m.Name)

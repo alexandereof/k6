@@ -36,6 +36,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"go.k6.io/k6/lib"
+	"go.k6.io/k6/lib/metrics"
 	"go.k6.io/k6/lib/testutils"
 	"go.k6.io/k6/output"
 	"go.k6.io/k6/stats"
@@ -65,6 +66,12 @@ func TestMakeHeader(t *testing.T) {
 }
 
 func TestSampleToRow(t *testing.T) {
+	t.Parallel()
+
+	testRegistry := metrics.NewRegistry()
+	testMetric, err := testRegistry.NewMetric("my_metric", stats.Gauge)
+	require.NoError(t, err)
+
 	testData := []struct {
 		testname    string
 		sample      *stats.Sample
@@ -75,7 +82,7 @@ func TestSampleToRow(t *testing.T) {
 			testname: "One res tag, one ignored tag, one extra tag",
 			sample: &stats.Sample{
 				Time:   time.Unix(1562324644, 0),
-				Metric: stats.New("my_metric", stats.Gauge),
+				Metric: testMetric,
 				Value:  1,
 				Tags: stats.NewSampleTags(map[string]string{
 					"tag1": "val1",
@@ -90,7 +97,7 @@ func TestSampleToRow(t *testing.T) {
 			testname: "Two res tags, three extra tags",
 			sample: &stats.Sample{
 				Time:   time.Unix(1562324644, 0),
-				Metric: stats.New("my_metric", stats.Gauge),
+				Metric: testMetric,
 				Value:  1,
 				Tags: stats.NewSampleTags(map[string]string{
 					"tag1": "val1",
@@ -107,7 +114,7 @@ func TestSampleToRow(t *testing.T) {
 			testname: "Two res tags, two ignored",
 			sample: &stats.Sample{
 				Time:   time.Unix(1562324644, 0),
-				Metric: stats.New("my_metric", stats.Gauge),
+				Metric: testMetric,
 				Value:  1,
 				Tags: stats.NewSampleTags(map[string]string{
 					"tag1": "val1",
@@ -214,6 +221,10 @@ func readCompressedFile(fileName string, fs afero.Fs) string {
 
 func TestRun(t *testing.T) {
 	t.Parallel()
+
+	testRegistry := metrics.NewRegistry()
+	testMetric, err := testRegistry.NewMetric("my_metric", stats.Gauge)
+	require.NoError(t, err)
 	testData := []struct {
 		samples        []stats.SampleContainer
 		fileName       string
@@ -224,7 +235,7 @@ func TestRun(t *testing.T) {
 			samples: []stats.SampleContainer{
 				stats.Sample{
 					Time:   time.Unix(1562324643, 0),
-					Metric: stats.New("my_metric", stats.Gauge),
+					Metric: testMetric,
 					Value:  1,
 					Tags: stats.NewSampleTags(map[string]string{
 						"check": "val1",
@@ -234,7 +245,7 @@ func TestRun(t *testing.T) {
 				},
 				stats.Sample{
 					Time:   time.Unix(1562324644, 0),
-					Metric: stats.New("my_metric", stats.Gauge),
+					Metric: testMetric,
 					Value:  1,
 					Tags: stats.NewSampleTags(map[string]string{
 						"check": "val1",
@@ -252,7 +263,7 @@ func TestRun(t *testing.T) {
 			samples: []stats.SampleContainer{
 				stats.Sample{
 					Time:   time.Unix(1562324643, 0),
-					Metric: stats.New("my_metric", stats.Gauge),
+					Metric: testMetric,
 					Value:  1,
 					Tags: stats.NewSampleTags(map[string]string{
 						"check": "val1",
@@ -262,7 +273,7 @@ func TestRun(t *testing.T) {
 				},
 				stats.Sample{
 					Time:   time.Unix(1562324644, 0),
-					Metric: stats.New("my_metric", stats.Gauge),
+					Metric: testMetric,
 					Value:  1,
 					Tags: stats.NewSampleTags(map[string]string{
 						"check": "val1",

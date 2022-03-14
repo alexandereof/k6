@@ -51,7 +51,7 @@ func checkName(name string) bool {
 
 // NewMetric returns new metric registered to this registry
 // TODO have multiple versions returning specific metric types when we have such things
-func (r *Registry) NewMetric(name string, typ stats.MetricType, t ...stats.ValueType) (*stats.Metric, error) {
+func (r *Registry) NewMetric(name string, mt stats.MetricType, vt ...stats.ValueType) (*stats.Metric, error) {
 	r.l.Lock()
 	defer r.l.Unlock()
 
@@ -61,12 +61,13 @@ func (r *Registry) NewMetric(name string, typ stats.MetricType, t ...stats.Value
 	oldMetric, ok := r.metrics[name]
 
 	if !ok {
-		vt := stats.Default
-		if len(t) > 0 {
-			vt = t[0]
+		valueType := stats.Default
+		if len(vt) > 0 {
+			valueType = vt[0]
 		}
+
 		var sink stats.Sink
-		switch typ {
+		switch mt {
 		case stats.Counter:
 			sink = &stats.CounterSink{}
 		case stats.Gauge:
@@ -76,22 +77,23 @@ func (r *Registry) NewMetric(name string, typ stats.MetricType, t ...stats.Value
 		case stats.Rate:
 			sink = &stats.RateSink{}
 		default:
-			return nil, fmt.Errorf("unable to create metric of type %q; reason: unknown metric type", typ.String())
+			return nil, fmt.Errorf("unable to create metric of type %q; reason: unknown metric type", mt.String())
 		}
 
-		m := &stats.Metric{Name: name, Type: typ, Contains: vt, Sink: sink}
+		m := &stats.Metric{Name: name, Type: mt, Contains: valueType, Sink: sink}
 		r.metrics[name] = m
 		return m, nil
 	}
-	if oldMetric.Type != typ {
-		return nil, fmt.Errorf("metric '%s' already exists but with type %s, instead of %s", name, oldMetric.Type, typ)
+
+	if oldMetric.Type != mt {
+		return nil, fmt.Errorf("metric '%s' already exists but with type %s, instead of %s", name, oldMetric.Type, mt)
 	}
-	if len(t) > 0 {
-		if t[0] != oldMetric.Contains {
-			return nil, fmt.Errorf("metric '%s' already exists but with a value type %s, instead of %s",
-				name, oldMetric.Contains, t[0])
-		}
+
+	if len(vt) > 0 && vt[0] != oldMetric.Contains {
+		return nil, fmt.Errorf("metric '%s' already exists but with a value type %s, instead of %s",
+			name, oldMetric.Contains, vt[0])
 	}
+
 	return oldMetric, nil
 }
 

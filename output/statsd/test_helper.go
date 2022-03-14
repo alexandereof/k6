@@ -29,6 +29,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/guregu/null.v3"
 
+	"go.k6.io/k6/lib/metrics"
 	"go.k6.io/k6/lib/testutils"
 	"go.k6.io/k6/lib/types"
 	"go.k6.io/k6/stats"
@@ -92,11 +93,17 @@ func baseTest(t *testing.T,
 		}
 	}
 
-	myCounter := stats.New("my_counter", stats.Counter)
-	myGauge := stats.New("my_gauge", stats.Gauge)
-	myTrend := stats.New("my_trend", stats.Trend)
-	myRate := stats.New("my_rate", stats.Rate)
-	myCheck := stats.New("my_check", stats.Rate)
+	registry := metrics.NewRegistry()
+	myCounter, err := registry.NewMetric("my_counter", stats.Counter)
+	require.NoError(t, err)
+	myGauge, err := registry.NewMetric("my_gauge", stats.Gauge)
+	require.NoError(t, err)
+	myTrend, err := registry.NewMetric("my_trend", stats.Trend)
+	require.NoError(t, err)
+	myRate, err := registry.NewMetric("my_rate", stats.Rate)
+	require.NoError(t, err)
+	myCheck, err := registry.NewMetric("my_check", stats.Rate)
+	require.NoError(t, err)
 	testMatrix := []struct {
 		input  []stats.SampleContainer
 		output string

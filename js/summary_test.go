@@ -34,6 +34,7 @@ import (
 	"gopkg.in/guregu/null.v3"
 
 	"go.k6.io/k6/lib"
+	"go.k6.io/k6/lib/metrics"
 	"go.k6.io/k6/lib/testutils"
 	"go.k6.io/k6/stats"
 )
@@ -98,14 +99,33 @@ func TestTextSummary(t *testing.T) {
 func TestTextSummaryWithSubMetrics(t *testing.T) {
 	t.Parallel()
 
-	parentMetric := stats.New("my_parent", stats.Counter)
+	registry := metrics.NewRegistry()
+	parentMetric, err := registry.NewMetric("my_parent", stats.Counter)
+	require.NoError(t, err)
 	parentMetric.Sink.Add(stats.Sample{Value: 11})
-	parentMetricPost := stats.New("my_parent_post", stats.Counter)
+
+	parentMetricPost, err := registry.NewMetric("my_parent_post", stats.Counter)
+	require.NoError(t, err)
 	parentMetricPost.Sink.Add(stats.Sample{Value: 22})
 
-	subMetric := stats.New("my_parent{sub:1}", stats.Counter)
+	// We instantiate Metric directly as Registry.NewMetric uses
+	// `checkName`, which does not handle the tag syntax.
+	subMetric := &stats.Metric{
+		Name:     "my_parent{sub:1}",
+		Type:     stats.Counter,
+		Contains: stats.Default,
+		Sink:     &stats.CounterSink{},
+	}
 	subMetric.Sink.Add(stats.Sample{Value: 1})
-	subMetricPost := stats.New("my_parent_post{sub:2}", stats.Counter)
+
+	// We instantiate Metric directly as Registry.NewMetric uses
+	// `checkName`, which does not handle the tag syntax.
+	subMetricPost := &stats.Metric{
+		Name:     "my_parent_post{sub:2}",
+		Type:     stats.Counter,
+		Contains: stats.Default,
+		Sink:     &stats.CounterSink{},
+	}
 	subMetricPost.Sink.Add(stats.Sample{Value: 2})
 
 	metrics := map[string]*stats.Metric{
@@ -147,15 +167,20 @@ func TestTextSummaryWithSubMetrics(t *testing.T) {
 }
 
 func createTestMetrics(t *testing.T) (map[string]*stats.Metric, *lib.Group) {
+	registry := metrics.NewRegistry()
+
 	metrics := make(map[string]*stats.Metric)
-	gaugeMetric := stats.New("vus", stats.Gauge)
+	gaugeMetric, err := registry.NewMetric("vus", stats.Gauge)
+	require.NoError(t, err)
 	gaugeMetric.Sink.Add(stats.Sample{Value: 1})
 
-	countMetric := stats.New("http_reqs", stats.Counter)
+	countMetric, err := registry.NewMetric("http_reqs", stats.Counter)
+	require.NoError(t, err)
 	countMetric.Tainted = null.BoolFrom(true)
 	countMetric.Thresholds = stats.Thresholds{Thresholds: []*stats.Threshold{{Source: "rate<100", LastFailed: true}}}
 
-	checksMetric := stats.New("checks", stats.Rate)
+	checksMetric, err := registry.NewMetric("checks", stats.Rate)
+	require.NoError(t, err)
 	checksMetric.Tainted = null.BoolFrom(false)
 	checksMetric.Thresholds = stats.Thresholds{Thresholds: []*stats.Threshold{{Source: "rate>70", LastFailed: false}}}
 	sink := &stats.TrendSink{}

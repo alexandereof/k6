@@ -27,10 +27,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+	"go.k6.io/k6/lib/metrics"
 	"go.k6.io/k6/stats"
 )
 
 func benchmarkInfluxdb(b *testing.B, t time.Duration) {
+	registry := metrics.NewRegistry()
+	metric, err := registry.NewMetric("test_gauge", stats.Gauge)
+	require.NoError(b, err)
+
 	testOutputCycle(b, func(rw http.ResponseWriter, r *http.Request) {
 		for {
 			time.Sleep(t)
@@ -47,7 +53,7 @@ func benchmarkInfluxdb(b *testing.B, t time.Duration) {
 		samples := make(stats.Samples, 10)
 		for i := 0; i < len(samples); i++ {
 			samples[i] = stats.Sample{
-				Metric: stats.New("testGauge", stats.Gauge),
+				Metric: metric,
 				Time:   time.Now(),
 				Tags: stats.NewSampleTags(map[string]string{
 					"something": "else",

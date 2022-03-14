@@ -29,29 +29,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNew(t *testing.T) {
-	t.Parallel()
-	testdata := map[string]struct {
-		Type     MetricType
-		SinkType Sink
-	}{
-		"Counter": {Counter, &CounterSink{}},
-		"Gauge":   {Gauge, &GaugeSink{}},
-		"Trend":   {Trend, &TrendSink{}},
-		"Rate":    {Rate, &RateSink{}},
-	}
-
-	for name, data := range testdata {
-		name, data := name, data
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			m := New("my_metric", data.Type)
-			assert.Equal(t, "my_metric", m.Name)
-			assert.IsType(t, data.SinkType, m.Sink)
-		})
-	}
-}
-
 func TestNewSubmetric(t *testing.T) {
 	t.Parallel()
 	testdata := map[string]struct {
