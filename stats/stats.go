@@ -460,27 +460,6 @@ func (m *Metric) Sample(t time.Time, tags *SampleTags, value float64) Sample {
 	}
 }
 
-func New(name string, typ MetricType, t ...ValueType) *Metric {
-	vt := Default
-	if len(t) > 0 {
-		vt = t[0]
-	}
-	var sink Sink
-	switch typ {
-	case Counter:
-		sink = &CounterSink{}
-	case Gauge:
-		sink = &GaugeSink{}
-	case Trend:
-		sink = &TrendSink{}
-	case Rate:
-		sink = &RateSink{}
-	default:
-		return nil
-	}
-	return &Metric{Name: name, Type: typ, Contains: vt, Sink: sink}
-}
-
 // A Submetric represents a filtered dataset based on a parent metric.
 type Submetric struct {
 	Name   string      `json:"name"`

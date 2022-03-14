@@ -475,6 +475,9 @@ func (e *Engine) processThresholds() (shouldAbort bool) {
 }
 
 func (e *Engine) processSamplesForMetrics(sampleContainers []stats.SampleContainer) {
+	// FIXME: remove it as soon as the stats package's content has been moved to metrics
+	registry := metrics.NewRegistry()
+
 	for _, sampleContainer := range sampleContainers {
 		samples := sampleContainer.GetSamples()
 
@@ -485,7 +488,7 @@ func (e *Engine) processSamplesForMetrics(sampleContainers []stats.SampleContain
 		for _, sample := range samples {
 			m, ok := e.Metrics[sample.Metric.Name]
 			if !ok {
-				m = stats.New(sample.Metric.Name, sample.Metric.Type, sample.Metric.Contains)
+				m = registry.MustNewMetric(sample.Metric.Name, sample.Metric.Type, sample.Metric.Contains)
 				m.Thresholds = e.thresholds[m.Name]
 				m.Submetrics = e.submetrics[m.Name]
 				e.Metrics[m.Name] = m
@@ -498,7 +501,7 @@ func (e *Engine) processSamplesForMetrics(sampleContainers []stats.SampleContain
 				}
 
 				if sm.Metric == nil {
-					sm.Metric = stats.New(sm.Name, sample.Metric.Type, sample.Metric.Contains)
+					sm.Metric = registry.MustNewMetric(sm.Name, sample.Metric.Type, sample.Metric.Contains)
 					sm.Metric.Sub = *sm
 					sm.Metric.Thresholds = e.thresholds[sm.Name]
 					e.Metrics[sm.Name] = sm.Metric

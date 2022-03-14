@@ -61,7 +61,25 @@ func (r *Registry) NewMetric(name string, typ stats.MetricType, t ...stats.Value
 	oldMetric, ok := r.metrics[name]
 
 	if !ok {
-		m := stats.New(name, typ, t...)
+		vt := stats.Default
+		if len(t) > 0 {
+			vt = t[0]
+		}
+		var sink stats.Sink
+		switch typ {
+		case stats.Counter:
+			sink = &stats.CounterSink{}
+		case stats.Gauge:
+			sink = &stats.GaugeSink{}
+		case stats.Trend:
+			sink = &stats.TrendSink{}
+		case stats.Rate:
+			sink = &stats.RateSink{}
+		default:
+			return nil, fmt.Errorf("unable to create metric of type %q; reason: unknown metric type", typ.String())
+		}
+
+		m := &stats.Metric{Name: name, Type: typ, Contains: vt, Sink: sink}
 		r.metrics[name] = m
 		return m, nil
 	}

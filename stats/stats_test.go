@@ -147,8 +147,18 @@ func TestSampleImplementations(t *testing.T) {
 	tagMap := map[string]string{"key1": "val1", "key2": "val2"}
 	now := time.Now()
 
+	// FIXME: Replace me with `metrics.NewRegistry`,
+	// as soon as `stats` packages' content has been
+	// migrated to `metrics`.
+	metric := &Metric{
+		Name:     "test_metric",
+		Type:     Counter,
+		Contains: Data,
+		Sink:     &CounterSink{},
+	}
+
 	sample := Sample{
-		Metric: New("test_metric", Counter),
+		Metric: metric,
 		Time:   now,
 		Tags:   NewSampleTags(tagMap),
 		Value:  1.0,
