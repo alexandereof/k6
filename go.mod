@@ -30,7 +30,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tidwall/gjson v1.10.2
 	github.com/tidwall/pretty v1.2.0
-	golang.org/x/crypto v0.0.0-20210503195802-e9a32991a82e
+	golang.org/x/crypto v0.0.0-20211215165025-cf75a172585e
 	golang.org/x/net v0.0.0-20220106012031-21a9c9cfe9c3
 	golang.org/x/term v0.0.0-20210503060354-a79de5458b56
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac
