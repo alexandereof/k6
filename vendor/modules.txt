@@ -148,7 +148,7 @@ github.com/tidwall/match
 # github.com/tidwall/pretty v1.2.0
 ## explicit; go 1.16
 github.com/tidwall/pretty
-# golang.org/x/crypto v0.0.0-20211215165025-cf75a172585e
+# golang.org/x/crypto v0.0.0-20220313003712-b769efc7c000
 ## explicit; go 1.17
 golang.org/x/crypto/md4
 golang.org/x/crypto/ocsp
